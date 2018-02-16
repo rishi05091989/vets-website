@@ -1,7 +1,7 @@
 import _ from 'lodash/fp';
 import { createSelector } from 'reselect';
 
-import { countries, states } from '../../utils/options-for-select';
+import { countries, states } from '../../utils/address';
 import { validateAddress } from '../validation';
 
 const countryValues = countries.map(object => object.value);

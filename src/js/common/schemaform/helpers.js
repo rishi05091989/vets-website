@@ -2,14 +2,20 @@ import _ from 'lodash/fp';
 import shouldUpdate from 'recompose/shouldUpdate';
 import { deepEquals } from 'react-jsonschema-form/lib/utils';
 
-import FormPage from './containers/FormPage';
-import ReviewPage from './review/ReviewPage';
-import RoutedSavablePage from './save-in-progress/RoutedSavablePage';
-import RoutedSavableReviewPage from './save-in-progress/RoutedSavableReviewPage';
+import asyncLoader from '../components/asyncLoader';
+// import FormPage from './containers/FormPage';
+// import ReviewPage from './review/ReviewPage';
+// import RoutedSavablePage from './save-in-progress/RoutedSavablePage';
+// import RoutedSavableReviewPage from './save-in-progress/RoutedSavableReviewPage';
 import FormSaved from './save-in-progress/FormSaved';
 import SaveInProgressErrorPage from './save-in-progress/SaveInProgressErrorPage';
 
 import { getInactivePages, getActivePages } from '../utils/helpers';
+
+const FormPageLoader = asyncLoader(() => import(/* webpackChunkName: "schemaform-page" */'./containers/FormPage').then(m => m.default));
+const RoutedSavablePageLoader = asyncLoader(() => import(/* webpackChunkName: "schemaform-sip-page" */'./save-in-progress/RoutedSavablePage').then(m => m.default));
+const ReviewPageLoader = asyncLoader(() => import(/* webpackChunkName: "schemaform-review-page" */'./review/ReviewPage').then(m => m.default));
+const RoutedSavableReviewPageLoader = asyncLoader(() => import(/* webpackChunkName: "schemaform-sip-review" */'./save-in-progress/RoutedSavableReviewPage').then(m => m.default));
 
 export function createFormPageList(formConfig) {
   return Object.keys(formConfig.chapters)
@@ -73,12 +79,12 @@ export function createPageList(formConfig, formPages) {
 export function createRoutes(formConfig) {
   const formPages = createFormPageList(formConfig);
   const pageList = createPageList(formConfig, formPages);
-  const Page = formConfig.disableSave ? FormPage : RoutedSavablePage;
+  const Page = formConfig.disableSave ? FormPageLoader : RoutedSavablePageLoader;
   let routes = formPages
     .map(page => {
       return {
         path: page.path,
-        component: page.component || Page,
+        component: Page,
         pageConfig: page,
         pageList,
         urlPrefix: formConfig.urlPrefix
@@ -126,7 +132,7 @@ export function createRoutes(formConfig) {
     {
       path: 'review-and-submit',
       formConfig,
-      component: formConfig.disableSave ? ReviewPage : RoutedSavableReviewPage,
+      component: formConfig.disableSave ? ReviewPageLoader : RoutedSavableReviewPageLoader,
       pageList
     },
     {
