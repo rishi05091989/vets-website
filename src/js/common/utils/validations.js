@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import moment from 'moment';
-// import { states } from './address';
 import { dateToMoment } from './helpers';
 
 /**
