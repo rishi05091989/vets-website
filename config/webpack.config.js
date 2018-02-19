@@ -254,12 +254,15 @@ const configGenerator = (options) => {
       sourceMap: true,
       minimize: true,
     }));
+  } else {
+    baseConfig.devtool = '#eval-source-map';
+  }
+
+  if (options.analyzer) {
     baseConfig.plugins.push(new BundleAnalyzerPlugin({
       analyzerMode: 'disabled',
       generateStatsFile: true
     }));
-  } else {
-    baseConfig.devtool = '#eval-source-map';
   }
 
   return baseConfig;
