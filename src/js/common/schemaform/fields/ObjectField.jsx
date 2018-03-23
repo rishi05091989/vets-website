@@ -3,10 +3,10 @@ import React from 'react';
 import classNames from 'classnames';
 import _ from 'lodash/fp';
 import { pureWithDeepEquals } from '../helpers';
+import { getDefaultFormState } from '../state/helpers';
 
 import {
   deepEquals,
-  getDefaultFormState,
   orderProperties,
   getDefaultRegistry
 } from 'react-jsonschema-form/lib/utils';

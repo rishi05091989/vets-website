@@ -3,11 +3,12 @@ import React from 'react';
 import _ from 'lodash/fp';
 
 import {
-  getDefaultFormState,
   orderProperties,
   shouldRender,
   getDefaultRegistry,
 } from 'react-jsonschema-form/lib/utils';
+
+import { getDefaultFormState } from '../state/helpers';
 
 /*
  * This is largely copied from the react-jsonschema-form library,

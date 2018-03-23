@@ -3,9 +3,7 @@ import React from 'react';
 import _ from 'lodash/fp';
 import Scroll from 'react-scroll';
 
-import {
-  getDefaultFormState
-} from 'react-jsonschema-form/lib/utils';
+import { getDefaultFormState } from '../state/helpers';
 
 import SchemaForm from '../components/SchemaForm';
 

@@ -7,9 +7,10 @@ import Scroll from 'react-scroll';
 
 import {
   toIdSchema,
-  getDefaultFormState,
   deepEquals
 } from 'react-jsonschema-form/lib/utils';
+
+import { getDefaultFormState } from '../state/helpers';
 
 const Element = Scroll.Element;
 

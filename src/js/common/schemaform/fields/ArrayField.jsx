@@ -8,9 +8,10 @@ import { setArrayRecordTouched } from '../helpers';
 
 import {
   toIdSchema,
-  getDefaultFormState,
   deepEquals
 } from 'react-jsonschema-form/lib/utils';
+
+import { getDefaultFormState } from '../state/helpers';
 
 import { errorSchemaIsValid } from '../validation';
 
