@@ -445,6 +445,10 @@ export function recalculateSchemaAndData(initialState) {
       return newState;
     }, initialState);
 }
+
+// This is copied from the rjsf library code and modified to remove the array defaulting
+// for schemas with minItems set. That code works fine for setting temporary data in widgets,
+// but we don't want to create empty items in our stored form data
 function computeDefaults(schema, parentDefaults, definitions = {}) {
   // Compute the defaults recursively: give highest priority to deepest nodes.
   let defaults = parentDefaults;
@@ -485,6 +489,8 @@ function computeDefaults(schema, parentDefaults, definitions = {}) {
   return defaults;
 }
 
+// This is copied from the rjsf library so that we can modify the computeDefaults
+// function as described above.
 export function getDefaultFormState(_schema, formData, definitions = {}) {
   if (!isObject(_schema)) {
     throw new Error(`Invalid schema: ${_schema}`);
