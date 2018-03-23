@@ -6,6 +6,7 @@ import {
   removeHiddenData,
   updateSchemaFromUiSchema,
   updateItemsSchema,
+  getDefaultFormState,
   replaceRefSchemas
 } from '../../../../src/js/common/schemaform/state/helpers';
 
@@ -638,6 +639,232 @@ describe('Schemaform formState:', () => {
       const newSchema = updateItemsSchema(schema, data);
 
       expect(newSchema.items.length).to.equal(data.length);
+    });
+  });
+  // These tests are taken from https://github.com/mozilla-services/react-jsonschema-form/blob/master/test/utils_test.js
+  // and modified to fit our code style
+  describe('getDefaultFormState', () => {
+    describe('root default', () => {
+      it('should map root schema default to form state, if any', () => {
+        expect(
+          getDefaultFormState({
+            type: 'string',
+            'default': 'foo',
+          })
+        ).to.eql('foo');
+      });
+    });
+
+    describe('nested default', () => {
+      it('should map schema object prop default to form state', () => {
+        expect(
+          getDefaultFormState({
+            type: 'object',
+            properties: {
+              string: {
+                type: 'string',
+                'default': 'foo',
+              }
+            }
+          })
+        ).to.eql({ string: 'foo' });
+      });
+
+      it('should default to empty object if no properties are defined', () => {
+        expect(
+          getDefaultFormState({
+            type: 'object',
+          })
+        ).to.eql({});
+      });
+
+      it('should recursively map schema object default to form state', () => {
+        expect(
+          getDefaultFormState({
+            type: 'object',
+            properties: {
+              object: {
+                type: 'object',
+                properties: {
+                  string: {
+                    type: 'string',
+                    'default': 'foo',
+                  }
+                }
+              }
+            }
+          })
+        ).to.eql({ object: { string: 'foo' } });
+      });
+
+      it('should map schema array default to form state', () => {
+        expect(
+          getDefaultFormState({
+            type: 'object',
+            properties: {
+              array: {
+                type: 'array',
+                'default': ['foo', 'bar'],
+                items: {
+                  type: 'string',
+                }
+              }
+            }
+          })
+        ).to.eql({ array: ['foo', 'bar'] });
+      });
+
+      it('should recursively map schema array default to form state', () => {
+        expect(
+          getDefaultFormState({
+            type: 'object',
+            properties: {
+              object: {
+                type: 'object',
+                properties: {
+                  array: {
+                    type: 'array',
+                    'default': ['foo', 'bar'],
+                    items: {
+                      type: 'string',
+                    }
+                  }
+                }
+              }
+            }
+          })
+        ).to.eql({ object: { array: ['foo', 'bar'] } });
+      });
+
+      it('should propagate nested defaults to resulting formData by default', () => {
+        const schema = {
+          type: 'object',
+          properties: {
+            object: {
+              type: 'object',
+              properties: {
+                array: {
+                  type: 'array',
+                  'default': ['foo', 'bar'],
+                  items: {
+                    type: 'string',
+                  },
+                },
+                bool: {
+                  type: 'boolean',
+                  'default': true,
+                }
+              }
+            }
+          }
+        };
+        expect(getDefaultFormState(schema, {})).eql({
+          object: { array: ['foo', 'bar'], bool: true },
+        });
+      });
+
+      it('should keep parent defaults if they don\'t have a node level default', () => {
+        const schema = {
+          type: 'object',
+          properties: {
+            level1: {
+              type: 'object',
+              'default': { level2: { leaf1: 1, leaf2: 1, leaf3: 1, leaf4: 1 } },
+              properties: {
+                level2: {
+                  type: 'object',
+                  'default': {
+                    // No level2 default for leaf1
+                    leaf2: 2,
+                    leaf3: 2,
+                  },
+                  properties: {
+                    leaf1: { type: 'number' }, // No level2 default for leaf1
+                    leaf2: { type: 'number' }, // No level3 default for leaf2
+                    leaf3: { type: 'number', 'default': 3 },
+                    leaf4: { type: 'number' }, // Defined in formData.
+                  }
+                }
+              }
+            }
+          }
+        };
+        expect(
+          getDefaultFormState(schema, { level1: { level2: { leaf4: 4 } } })
+        ).eql({
+          level1: { level2: { leaf1: 1, leaf2: 2, leaf3: 3, leaf4: 4 } },
+        });
+      });
+
+      it('should use parent defaults for ArrayFields', () => {
+        const schema = {
+          type: 'object',
+          properties: {
+            level1: {
+              type: 'array',
+              'default': [1, 2, 3],
+              items: { type: 'number' },
+            }
+          }
+        };
+        expect(getDefaultFormState(schema, {})).eql({ level1: [1, 2, 3] });
+      });
+
+      it('should use parent defaults for ArrayFields if declared in parent', () => {
+        const schema = {
+          type: 'object',
+          'default': { level1: [1, 2, 3] },
+          properties: {
+            level1: {
+              type: 'array',
+              items: { type: 'number' },
+            }
+          }
+        };
+        expect(getDefaultFormState(schema, {})).eql({ level1: [1, 2, 3] });
+      });
+
+      it('should map item defaults to fixed array default', () => {
+        const schema = {
+          type: 'object',
+          properties: {
+            array: {
+              type: 'array',
+              items: [
+                {
+                  type: 'string',
+                  'default': 'foo',
+                },
+                {
+                  type: 'number',
+                }
+              ]
+            }
+          }
+        };
+        expect(getDefaultFormState(schema, {})).eql({
+          array: ['foo', undefined],
+        });
+      });
+
+      it('should use schema default for referenced definitions', () => {
+        const schema = {
+          definitions: {
+            testdef: {
+              type: 'object',
+              properties: {
+                foo: { type: 'number' },
+              }
+            }
+          },
+          $ref: '#/definitions/testdef',
+          'default': { foo: 42 },
+        };
+
+        expect(getDefaultFormState(schema, undefined, schema.definitions)).eql({
+          foo: 42,
+        });
+      });
     });
   });
 });
